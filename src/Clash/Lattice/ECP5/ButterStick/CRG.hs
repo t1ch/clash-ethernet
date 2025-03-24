@@ -90,24 +90,24 @@ pll50 !_ = (clockGen, unsafeToActiveLow resetGen)
   wire ~GENSYM[clk50][0];
   wire ~GENSYM[pll50_locked][1];
 
-  (* FREQUENCY_PIN_CLKI=\"30\" *)
-  (* FREQUENCY_PIN_CLKOP=\"50\" *)
-  (* ICP_CURRENT=\"12\" *) (* LPF_RESISTOR=\"8\" *) (* MFG_ENABLE_FILTEROPAMP=\"1\" *) (* MFG_GMCREF_SEL=\"2\" *)
+  (* FREQUENCY_PIN_CLKI=\\"30\\" *)
+  (* FREQUENCY_PIN_CLKOP=\\"50\\" *)
+  (* ICP_CURRENT=\\"12\\" *) (* LPF_RESISTOR=\\"8\\" *) (* MFG_ENABLE_FILTEROPAMP=\\"1\\" *) (* MFG_GMCREF_SEL=\\"2\\" *)
   EHXPLLL #(
-    .PLLRST_ENA(\"DISABLED\"),
-    .INTFB_WAKE(\"DISABLED\"),
-    .STDBY_ENABLE(\"DISABLED\"),
-    .DPHASE_SOURCE(\"DISABLED\"),
-    .OUTDIVIDER_MUXA(\"DIVA\"),
-    .OUTDIVIDER_MUXB(\"DIVB\"),
-    .OUTDIVIDER_MUXC(\"DIVC\"),
-    .OUTDIVIDER_MUXD(\"DIVD\"),
+    .PLLRST_ENA(\\"DISABLED\\"),
+    .INTFB_WAKE(\\"DISABLED\\"),
+    .STDBY_ENABLE(\\"DISABLED\\"),
+    .DPHASE_SOURCE(\\"DISABLED\\"),
+    .OUTDIVIDER_MUXA(\\"DIVA\\"),
+    .OUTDIVIDER_MUXB(\\"DIVB\\"),
+    .OUTDIVIDER_MUXC(\\"DIVC\\"),
+    .OUTDIVIDER_MUXD(\\"DIVD\\"),
     .CLKI_DIV(3),
-    .CLKOP_ENABLE(\"ENABLED\"),
+    .CLKOP_ENABLE(\\"ENABLED\\"),
     .CLKOP_DIV(2),
     .CLKOP_CPHASE(1),
     .CLKOP_FPHASE(0),
-    .FEEDBK_PATH(\"CLKOP\"),
+    .FEEDBK_PATH(\\"CLKOP\\"),
     .CLKFB_DIV(10)
   ) ~GENSYM[pll50_inst][2] (
     .RST(1'b0),
@@ -150,24 +150,24 @@ pll125 !_ = (clockGen, unsafeToActiveLow resetGen)
   wire ~GENSYM[clkEthTx][0];
   wire ~GENSYM[pll125_locked][1];
 
-  (* FREQUENCY_PIN_CLKI=\"30\" *)
-  (* FREQUENCY_PIN_CLKOP=\"125\" *)
-  (* ICP_CURRENT=\"12\" *) (* LPF_RESISTOR=\"8\" *) (* MFG_ENABLE_FILTEROPAMP=\"1\" *) (* MFG_GMCREF_SEL=\"2\" *)
+  (* FREQUENCY_PIN_CLKI=\\"30\\" *)
+  (* FREQUENCY_PIN_CLKOP=\\"125\\" *)
+  (* ICP_CURRENT=\\"12\\" *) (* LPF_RESISTOR=\\"8\\" *) (* MFG_ENABLE_FILTEROPAMP=\\"1\\" *) (* MFG_GMCREF_SEL=\\"2\\" *)
   EHXPLLL #(
-          .PLLRST_ENA(\"DISABLED\"),
-          .INTFB_WAKE(\"DISABLED\"),
-          .STDBY_ENABLE(\"DISABLED\"),
-          .DPHASE_SOURCE(\"DISABLED\"),
-          .OUTDIVIDER_MUXA(\"DIVA\"),
-          .OUTDIVIDER_MUXB(\"DIVB\"),
-          .OUTDIVIDER_MUXC(\"DIVC\"),
-          .OUTDIVIDER_MUXD(\"DIVD\"),
+          .PLLRST_ENA(\\"DISABLED\\"),
+          .INTFB_WAKE(\\"DISABLED\\"),
+          .STDBY_ENABLE(\\"DISABLED\\"),
+          .DPHASE_SOURCE(\\"DISABLED\\"),
+          .OUTDIVIDER_MUXA(\\"DIVA\\"),
+          .OUTDIVIDER_MUXB(\\"DIVB\\"),
+          .OUTDIVIDER_MUXC(\\"DIVC\\"),
+          .OUTDIVIDER_MUXD(\\"DIVD\\"),
           .CLKI_DIV(3),
-          .CLKOP_ENABLE(\"ENABLED\"),
+          .CLKOP_ENABLE(\\"ENABLED\\"),
           .CLKOP_DIV(4),
           .CLKOP_CPHASE(2),
           .CLKOP_FPHASE(0),
-          .FEEDBK_PATH(\"CLKOP\"),
+          .FEEDBK_PATH(\\"CLKOP\\"),
           .CLKFB_DIV(50)
       ) ~GENSYM[pll125_inst][2] (
           .RST(1'b0),
