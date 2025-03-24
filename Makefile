@@ -44,13 +44,15 @@ python_test: /run/netns/colorlight prog
 
 HASKELL_SOURCES=$(shell find src -type f -iname '*.hs')
 
-verilog=verilog/Clash.Lattice.ECP5.Colorlight.TopEntity.topEntity/topEntity.v
+COPY = cp -a
+
+verilog=verilog/Clash.Lattice.ECP5.ButterStick.TopEntity.topEntity/topEntity.v
 netlist=netlist/synth.json
 pnr=netlist/pnr.cfg
 bitstream=netlist/clash-eth.bit
-
+dfu=netlist/clash-eth.dfu
 ${verilog}: ${HASKELL_SOURCES}
-	cabal run clash -- Clash.Lattice.ECP5.Colorlight.TopEntity --verilog -g -fclash-clear
+	cabal run clash -- Clash.Lattice.ECP5.ButterStick.TopEntity --verilog -g -fclash-clear
 
 .PHONY: verilog
 verilog: $(verilog)
@@ -62,7 +64,7 @@ ${netlist}: ${verilog}
 		-p "synth_ecp5 -no-rw-check -abc2 -top topEntity" \
 		-p "ecp5_infer_bram_outreg" \
 		-p "write_json ${netlist}" \
-		verilog/Clash.Lattice.ECP5.Colorlight.TopEntity.topEntity/*.v
+		verilog/Clash.Lattice.ECP5.ButterStick.TopEntity.topEntity/*.v
 
 .PHONY: netlist
 netlist: $(netlist)
@@ -70,9 +72,9 @@ netlist: $(netlist)
 ${pnr}: ${netlist} pinout.lpf
 	nextpnr-ecp5 --json ${netlist} \
 		--lpf pinout.lpf \
-		--textcfg ${pnr} --25k \
-		--speed 6 \
-		--package CABGA256 \
+		--textcfg ${pnr} --um5g-85k \
+		--speed 8 \
+		--package CABGA381 \
 		--randomize-seed --timing-allow-fail
 
 .PHONY: pnr
@@ -83,6 +85,13 @@ ${bitstream}: ${pnr}
 
 .PHONY: bitstream
 bitstream: $(bitstream)
+
+%.dfu : %.bit
+	$(COPY) $< $@
+	dfu-suffix -v 1209 -p 5af1 -a $@
+
+dfu: ${dfu}
+	dfu-util --alt 0 --download $< --reset
 
 prog: ${bitstream}
 	sudo "PATH=$$PATH" env ecpprog -S ${bitstream}
