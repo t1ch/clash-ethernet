@@ -139,7 +139,7 @@ library
     deepseq,
     hashable,
     constraints,
-    -- For debugging
+    mtl,
     pretty-show
 
 test-suite doctests

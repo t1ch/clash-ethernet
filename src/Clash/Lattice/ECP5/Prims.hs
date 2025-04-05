@@ -246,7 +246,7 @@ iddrx1f clk rst xs = ddrIn clk rst enableGen (unpack 0, unpack 0, unpack 0) xs
     }
   ]
   |]) #-}
-{-# NOINLINE iddrx1f #-}
+{-# OPAQUE iddrx1f #-}
 
 -- | x1 output DDR
 oddrx1f
@@ -296,7 +296,7 @@ oddrx1f clk rst xs ys = ddrOut clk rst enableGen (unpack 0) ((,) <$> xs <*> ys)
     }
   ]
   |]) #-}
-{-# NOINLINE oddrx1f #-}
+{-# OPAQUE oddrx1f #-}
 
 -- | Dynamic delay element
 delayf
@@ -351,7 +351,7 @@ delayf !_ !_ !_ !_ inp = inp
     }
   ]
   |]) #-}
-{-# NOINLINE delayf #-}
+{-# OPAQUE delayf #-}
 
 -- | Static delay element
 delayg
@@ -393,4 +393,4 @@ delayg !_ inp = inp
     }
   ]
   |]) #-}
-{-# NOINLINE delayg #-}
+{-# OPAQUE delayg #-}

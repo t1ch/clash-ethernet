@@ -191,4 +191,3 @@ rgmiiTxC txDelay oddr = fromSignals go
         err = getErr fwdIn
         bwdOut = pure $ PacketStreamS2M {_ready = True}
         fwdOut = rgmiiSender hasClock hasReset txDelay oddr input err
-

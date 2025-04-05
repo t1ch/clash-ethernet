@@ -61,7 +61,7 @@ createDomain vSystem
 
 -- | Simple Clock reset generator for the colorlight ECP5 board
 --   Generated using ecppll utility
-{-# NOINLINE crg #-}
+{-# OPAQUE crg #-}
 crg
   :: Clock Dom30
   -- ^ Input clock
@@ -132,7 +132,7 @@ pll50 !_ = (clockGen, unsafeToActiveLow resetGen)
     }
   ]
   |]) #-}
-{-# NOINLINE pll50 #-}
+{-# OPAQUE pll50 #-}
 
 -- | Generate a 125Mhz clock from 30Mhz
 pll125
@@ -192,4 +192,4 @@ pll125 !_ = (clockGen, unsafeToActiveLow resetGen)
     }
   ]
   |]) #-}
-{-# NOINLINE pll125 #-}
+{-# OPAQUE pll125 #-}

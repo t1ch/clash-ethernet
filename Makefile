@@ -75,13 +75,14 @@ ${pnr}: ${netlist} pinout.lpf
 		--textcfg ${pnr} --um5g-85k \
 		--speed 8 \
 		--package CABGA381 \
+		--no-tmdriv \
 		--randomize-seed --timing-allow-fail
 
 .PHONY: pnr
 pnr: $(pnr)
 
 ${bitstream}: ${pnr}
-	ecppack ${pnr} --bit ${bitstream} --bootaddr 0
+	ecppack --compress --freq 38.8 --input ${pnr} --bit ${bitstream}
 
 .PHONY: bitstream
 bitstream: $(bitstream)

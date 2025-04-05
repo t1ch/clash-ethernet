@@ -90,9 +90,11 @@ IOBUF PORT "ulpi_rst" IO_TYPE=LVCMOS18 SLEWRATE=FAST;
 # Ethernet Clock
 LOCATE COMP "eth_tx_clk" SITE "E15";
 IOBUF PORT "eth_tx_clk" IO_TYPE=LVCMOS33 SLEWRATE=FAST;
+FREQUENCY PORT "eth_tx_clk" 125.0 MHz;
 
 LOCATE COMP "eth_rx_clk" SITE "D11";
 IOBUF PORT "eth_rx_clk" IO_TYPE=LVCMOS33 SLEWRATE=FAST;
+
 
 # Ethernet Interface
 LOCATE COMP "eth_rst_n" SITE "B20";
