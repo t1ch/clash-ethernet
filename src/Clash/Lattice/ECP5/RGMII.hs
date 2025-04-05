@@ -93,8 +93,8 @@ rgmiiSender txClk rst txdelay oddr input err = channel
 
     channel = RGMIITXChannel
                 { rgmii_tx_clk = txdelay $ oddr txClk rst (pure 1) (pure 0)
-                , rgmii_tx_ctl = txdelay txCtl
-                , rgmii_tx_data = txdelay txData
+                , rgmii_tx_ctl = txCtl
+                , rgmii_tx_data = txData
                 }
 
 -- | RGMII receiver.

@@ -75,7 +75,6 @@ ${pnr}: ${netlist} pinout.lpf
 		--textcfg ${pnr} --um5g-85k \
 		--speed 8 \
 		--package CABGA381 \
-		--no-tmdriv \
 		--randomize-seed --timing-allow-fail
 
 .PHONY: pnr
