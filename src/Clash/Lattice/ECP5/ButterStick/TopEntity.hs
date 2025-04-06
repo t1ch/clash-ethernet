@@ -1,61 +1,46 @@
 {-# LANGUAGE BangPatterns #-}
-
 {-# LANGUAGE FlexibleContexts #-}
-
 {-# LANGUAGE NumericUnderscores #-}
-
 {-# LANGUAGE DataKinds #-}
-
 {-# LANGUAGE TypeOperators #-}
-
 {-# LANGUAGE ScopedTypeVariables #-}
-
 {-# LANGUAGE DeriveGeneric #-}
 
-
-
 {-|
-
 Module      : Clash.Lattice.ECP5.ButterStick.TopEntity
-
 Description : Top entity for ButterStick board that sends an ARP broadcast when user_btn[0] is pressed
-
 -}
-
 module Clash.Lattice.ECP5.ButterStick.TopEntity where
 
-
-
 import Clash.Explicit.Prelude
-
 import Clash.Prelude ( exposeClockResetEnable )
-
 import Clash.Lattice.ECP5.Prims
-
 import Clash.Lattice.ECP5.RGMII
-
 import Clash.Lattice.ECP5.ButterStick.CRG
-
 import Clash.Annotations.TH
 
-
-
 import Clash.Signal.BiSignal
-
 import Protocols
-
 import Protocols.Extra.PacketStream
 
-
-
 import GHC.Stack (HasCallStack)
-
 import GHC.TypeLits hiding (SNat)
-
 import GHC.Generics (Generic)
 
--- | Total packet size (64 bytes - Ethernet minimum frame size)
-type PacketSize = 64
+-- | ARP payload size (28 bytes)
+type ARPSize = 28
+
+-- | Ethernet header size (14 bytes)
+type EthernetHeaderSize = 14
+
+-- | Ethernet payload minimum size (46 bytes - includes ARP data and any padding)
+type EthernetMinPayloadSize = 46
+
+-- | FCS/CRC size (4 bytes)
+type CRCSize = 4
+
+-- | Total packet size (14 + 46 + 4 = 64 bytes - Ethernet minimum frame size with CRC)
+type PacketSize = EthernetHeaderSize + EthernetMinPayloadSize + CRCSize
 
 -- | ARP packet state machine
 data ARPState
@@ -68,9 +53,31 @@ instance NFDataX ARPState where
   rnfX Idle = ()
   rnfX (Sending idx) = rnfX idx
 
--- | Create ARP packet as a Vec of bytes (total 64 bytes including Ethernet padding)
-makeARPPacket :: Vec PacketSize (BitVector 8)
-makeARPPacket =
+-- | CRC32 polynomial (standard Ethernet polynomial: 0x04C11DB7)
+crcPoly :: BitVector 33
+crcPoly = 0x104C11DB7
+
+-- | Calculate CRC32 for a sequence of bytes
+calculateCRC32 :: Vec (EthernetHeaderSize + EthernetMinPayloadSize) (BitVector 8) -> BitVector 32
+calculateCRC32 bytes = complement $ foldl updateCRC initCRC bytes
+  where
+    initCRC = complement 0xFFFFFFFF
+
+    updateCRC :: BitVector 32 -> BitVector 8 -> BitVector 32
+    updateCRC crc byte =
+      let byte' = shiftL (zeroExtend byte) 24
+          initialXor = crc `xor` byte'
+      in foldl shiftAndXor initialXor (replicate d8 ())
+
+    shiftAndXor :: BitVector 32 -> () -> BitVector 32
+    shiftAndXor crc _ =
+      let msb = testBit crc 31
+          shifted = shiftL crc 1
+      in if msb then shifted `xor` (0x04C11DB7) else shifted
+
+-- | Create ARP packet as a Vec of bytes (60 bytes for header+payload, will add 4 byte CRC later)
+makeARPPacketWithoutCRC :: Vec (EthernetHeaderSize + EthernetMinPayloadSize) (BitVector 8)
+makeARPPacketWithoutCRC =
   -- Ethernet Header (14 bytes)
   0xFF :> 0xFF :> 0xFF :> 0xFF :> 0xFF :> 0xFF :>  -- Destination MAC (broadcast)
   0x00 :> 0x11 :> 0x22 :> 0x33 :> 0x44 :> 0x55 :>  -- Source MAC
@@ -89,12 +96,24 @@ makeARPPacket =
   0x00 :> 0x00 :> 0x00 :> 0x00 :> 0x00 :> 0x00 :>
   -- Target IP (192.168.1.124)
   0xC0 :> 0xA8 :> 0x01 :> 0x7C :>
-  -- Padding (to minimum Ethernet frame size of 64 bytes)
-  replicate d22 0x00
+  -- Padding (to minimum Ethernet payload size of 46 bytes)
+  replicate d18 0x00
+
+-- | Complete Ethernet frame including CRC
+makeARPPacket :: Vec PacketSize (BitVector 8)
+makeARPPacket =
+  let payload = makeARPPacketWithoutCRC
+      crc = calculateCRC32 payload
+      -- CRC bytes in little-endian order (LSB first)
+      crcBytes = (slice d7 d0 crc) :>
+                 (slice d15 d8 crc) :>
+                 (slice d23 d16 crc) :>
+                 (slice d31 d24 crc) :> Nil
+  in payload ++ crcBytes
 
 -- | Main circuit that uses the simplest possible approach
 topEntity
-  :: "eth_rx_clk" ::: Clock DomEthTx
+  :: "clk30" ::: Clock Dom30
   -> "user_btn"    ::: Signal DomEthTx (Vec 2 Bit)
   -> "eth"         ::: RGMIIRXChannel DomEth DomDDREth
   -> (
@@ -102,11 +121,12 @@ topEntity
        "eth_rst_n" ::: Signal DomEthTx Bit
      )
 
-topEntity ethTxClk user_btn rgmiiRxChannel  =
-  ( rgmiiSender ethTxClk rst (delayg d80) oddrx1f byteToSend err
+topEntity clk30 user_btn rgmiiRxChannel  =
+  ( rgmiiSender ethTxClk rst (delayg d55) oddrx1f byteToSend err
   , eth_rst_n
   )
   where
+    (clk60, ethTxClk, rst60, rstEthTx) = crg clk30
     -- Extract button state and reset signal
     btn0      = (! 0) <$> user_btn
     eth_rst_n = (! 1) <$> user_btn
@@ -135,7 +155,6 @@ topEntity ethTxClk user_btn rgmiiRxChannel  =
                        else Sending (idx + 1)
                 ) <$> state <*> btnPressed
 
-
     -- Generate the output based on current state
     output = (\st ->
                 case st of
@@ -145,6 +164,5 @@ topEntity ethTxClk user_btn rgmiiRxChannel  =
 
     -- Unbundle the output
     (byteToSend, err) = unbundle output
-
 
 makeTopEntity 'topEntity
