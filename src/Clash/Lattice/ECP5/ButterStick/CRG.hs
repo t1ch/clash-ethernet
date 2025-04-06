@@ -24,8 +24,8 @@ createDomain vSystem
   }
 
 createDomain vSystem
-  { vName="Dom50"
-  , vPeriod=20000
+  { vName="Dom60"
+  , vPeriod=16667
   , vActiveEdge=Rising
   , vResetKind=Asynchronous
   , vInitBehavior=Unknown
@@ -65,33 +65,33 @@ createDomain vSystem
 crg
   :: Clock Dom30
   -- ^ Input clock
-  -> (Clock Dom50, Clock DomEthTx, Reset Dom50, Reset DomEthTx)
+  -> (Clock Dom60, Clock DomEthTx, Reset Dom60, Reset DomEthTx)
      -- ^ Output clock and reset
-crg clkin = (clk50, clkEthTx, rst50, rstEthTx)
+crg clkin = (clk60, clkEthTx, rst60, rstEthTx)
   where
-    (clk50, locked50)     = pll50 clkin
+    (clk60, locked60)     = pll60 clkin
     (clkEthTx, lockedEthTx) = pll125 clkin
-    rst50    = resetSynchronizer clk50 (unsafeFromActiveLow locked50)
+    rst60    = resetSynchronizer clk60 (unsafeFromActiveLow locked60)
     rstEthTx = resetSynchronizer clkEthTx (unsafeFromActiveLow lockedEthTx)
 
--- | Generate a 50Mhz clock from 30Mhz
-pll50
+-- | Generate a 60Mhz clock from 30Mhz
+pll60
   :: Clock Dom30
   -- ^ Input 30 Mhz clock
-  -> (Clock Dom50, Signal Dom50 Bool)
-  -- ^ Output 50Mhz clock and unsynchronized reset signal
-pll50 !_ = (clockGen, unsafeToActiveLow resetGen)
-{-# ANN pll50 (InlinePrimitive [Verilog] $ unindent [i|
+  -> (Clock Dom60, Signal Dom60 Bool)
+  -- ^ Output 60Mhz clock and unsynchronized reset signal
+pll60 !_ = (clockGen, unsafeToActiveLow resetGen)
+{-# ANN pll60 (InlinePrimitive [Verilog] $ unindent [i|
   [ { "BlackBox" :
-      { "name"     : "Clash.Lattice.ECP5.ButterStick.CRG.pll50"
+      { "name"     : "Clash.Lattice.ECP5.ButterStick.CRG.pll60"
       , "kind"     : "Declaration"
       , "template" :
-  "// pll50 primary begin
-  wire ~GENSYM[clk50][0];
-  wire ~GENSYM[pll50_locked][1];
+  "// pll60 primary begin
+  wire ~GENSYM[clk60][0];
+  wire ~GENSYM[pll60_locked][1];
 
   (* FREQUENCY_PIN_CLKI=\\"30\\" *)
-  (* FREQUENCY_PIN_CLKOP=\\"50\\" *)
+  (* FREQUENCY_PIN_CLKOP=\\"60\\" *)
   (* ICP_CURRENT=\\"12\\" *) (* LPF_RESISTOR=\\"8\\" *) (* MFG_ENABLE_FILTEROPAMP=\\"1\\" *) (* MFG_GMCREF_SEL=\\"2\\" *)
   EHXPLLL #(
     .PLLRST_ENA(\\"DISABLED\\"),
@@ -102,14 +102,14 @@ pll50 !_ = (clockGen, unsafeToActiveLow resetGen)
     .OUTDIVIDER_MUXB(\\"DIVB\\"),
     .OUTDIVIDER_MUXC(\\"DIVC\\"),
     .OUTDIVIDER_MUXD(\\"DIVD\\"),
-    .CLKI_DIV(3),
+    .CLKI_DIV(1),
     .CLKOP_ENABLE(\\"ENABLED\\"),
     .CLKOP_DIV(2),
     .CLKOP_CPHASE(1),
     .CLKOP_FPHASE(0),
     .FEEDBK_PATH(\\"CLKOP\\"),
-    .CLKFB_DIV(10)
-  ) ~GENSYM[pll50_inst][2] (
+    .CLKFB_DIV(4)
+  ) ~GENSYM[pll60_inst][2] (
     .RST(1'b0),
     .STDBY(1'b0),
     .CLKI(~ARG[0]),
@@ -127,12 +127,12 @@ pll50 !_ = (clockGen, unsafeToActiveLow resetGen)
   );
 
   assign ~RESULT = {~SYM[0], ~SYM[1]};
-  // pll50 primary end"
+  // pll60 primary end"
       }
     }
   ]
   |]) #-}
-{-# OPAQUE pll50 #-}
+{-# OPAQUE pll60 #-}
 
 -- | Generate a 125Mhz clock from 30Mhz
 pll125
