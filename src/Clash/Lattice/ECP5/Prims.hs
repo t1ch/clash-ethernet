@@ -370,7 +370,7 @@ delayg !_ inp = inp
   "// DELAYG begin
   ~IF~ISSCALAR[2]~THEN
     DELAYG #(
-      .DEL_MODE(\\"USER_DEFINED\\"),
+      .DEL_MODE(\\"SCLK_ALIGNED\\"),
       .DEL_VALUE(7'd~LIT[1])
     ) ~GENSYM[DELAYG_INST][3] (
       .A(~VAR[d][2]),
@@ -380,7 +380,7 @@ delayg !_ inp = inp
     genvar ~GENSYM[i][0];
     for (~SYM[0] = 0; ~SYM[0] < ~SIZE[~TYP[2]]; ~SYM[0] = ~SYM[0] + 1) begin : ~GENSYM[DELAYG_GEN][1]
       DELAYG #(
-        .DEL_MODE(\\"USER_DEFINED\\"),
+        .DEL_MODE(\\"SCLK_ALIGNED\\"),
         .DEL_VALUE(7'd~LIT[1])
       ) ~GENSYM[DELAYG_INST][2] (
         .A(~VAR[d][2][~SYM[0]]),

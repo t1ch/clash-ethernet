@@ -96,55 +96,22 @@ makeARPPacket =
 topEntity
   :: "eth_rx_clk" ::: Clock DomEthTx
   -> "user_btn"    ::: Signal DomEthTx (Vec 2 Bit)
-  -> "eth"         ::: RGMIIRXChannel DomEth DomDDREth
+  -> "eth"         ::: RGMIIRXChannel DomEthTx DomDDREth
   -> (
        "eth"       ::: RGMIITXChannel DomDDREth,
        "eth_rst_n" ::: Signal DomEthTx Bit
      )
 
-topEntity ethTxClk user_btn rgmiiRxChannel  =
-  ( rgmiiSender ethTxClk rst (delayg d80) oddrx1f byteToSend err
+topEntity ethRxClk user_btn rgmiiRxChannel  =
+  ( rgmiiSender ethTxClk rst (delayg d80) oddrx1f rxByte rxErr
   , eth_rst_n
   )
   where
-    -- Extract button state and reset signal
-    btn0      = (! 0) <$> user_btn
+    ethTxClk = ethRxClk
+
     eth_rst_n = (! 1) <$> user_btn
+    rst = resetSynchronizer ethRxClk (unsafeFromActiveLow $ bitToBool <$> eth_rst_n)
 
-    -- Convert Bit to Bool for button signal
-    btn0Bool = fmap bitToBool btn0
-
-    -- Create a simple reset signal (active low - not asserted)
-    rstSignal = pure False
-    rst = unsafeFromActiveHigh rstSignal
-
-    -- Simple button edge detector for button 0
-    btnReg = register ethTxClk rst enableGen False btn0Bool
-    btnPressed = (&&) <$> btn0Bool <*> (not <$> btnReg)
-
-    -- Definition of our simple state machine using recursive bindings
-    state  = register ethTxClk rst enableGen Idle nextState
-
-    -- Next state logic
-    nextState = (\currentState btnIsPressed ->
-                   case currentState of
-                     Idle ->
-                       if btnIsPressed then Sending 0 else Idle
-                     Sending idx ->
-                       if idx >= maxBound then Idle
-                       else Sending (idx + 1)
-                ) <$> state <*> btnPressed
-
-
-    -- Generate the output based on current state
-    output = (\st ->
-                case st of
-                  Idle         -> (Nothing, False)
-                  Sending idx  -> (Just (makeARPPacket !! idx), False)
-             ) <$> state
-
-    -- Unbundle the output
-    (byteToSend, err) = unbundle output
-
+    (rxErr, rxByte) = unbundle $ rgmiiReceiver rgmiiRxChannel (delayg d0) iddrx1f
 
 makeTopEntity 'topEntity
